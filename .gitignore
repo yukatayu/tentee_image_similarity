@@ -31,7 +31,10 @@
 *.out
 *.app
 
-# bild
+# Bild
 build/
 */build/
+
+# Swap
+*.swp
 

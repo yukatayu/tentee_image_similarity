@@ -12,3 +12,10 @@ add_subdirectory(core)
 add_executable(run_test app/test.cpp)
 target_link_libraries(run_test illust_image_similarity)
 
+# OpenCV
+find_package(OpenCV REQUIRED)
+if(OpenCV_FOUND)
+	target_include_directories(run_test PUBLIC ${OpenCV_INCLUDE_DIRS})
+	target_link_libraries(run_test ${OpenCV_LIBS})
+endif()
+

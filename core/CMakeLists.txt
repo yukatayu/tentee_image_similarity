@@ -12,3 +12,9 @@ target_include_directories(illust_image_similarity
 	PUBLIC ${PROJECT_SOURCE_DIR}/
 )
 
+find_package(OpenCV REQUIRED)
+if(OpenCV_FOUND)
+	target_include_directories(illust_image_similarity PUBLIC ${OpenCV_INCLUDE_DIRS})
+	target_link_libraries(illust_image_similarity ${OpenCV_LIBS})
+endif()
+
