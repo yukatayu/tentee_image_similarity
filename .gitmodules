@@ -1,0 +1,3 @@
+[submodule "tentee_patch"]
+	path = tentee_patch
+	url = https://github.com/TenteEEEE/quiche_pantie_patch.git
