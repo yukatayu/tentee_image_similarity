@@ -1,3 +1,6 @@
 [submodule "tentee_patch"]
 	path = tentee_patch
 	url = https://github.com/TenteEEEE/quiche_pantie_patch.git
+[submodule "core/cpp_filter_util"]
+	path = core/cpp_filter_util
+	url = https://github.com/yukatayu/cpp_filter_util.git
