@@ -16,6 +16,17 @@
 		}
 	}
 
+	const fireTrigger = () => {
+		let e = document.createEvent("HTMLEvents");
+		e.initEvent('change', true, true); // event type, bubbling, cancelable
+		return document.querySelector("#imgName").dispatchEvent(e);
+	}
+
+	const jump = (name) => {
+		document.querySelector("#imgName").value = name;
+		fireTrigger();
+	};
+
 	const cellOf = (elem) => {
 		let tr = document.createElement('tr');
 		let td = document.createElement('td');
@@ -28,7 +39,10 @@
 		const base = './tentee_patch/dream/';
 		let img = document.createElement('img');
 		img.setAttribute('src', base + imgName);
-		img.style.width = '314px';
+		// TODO: Reflection :thinking_face:
+		img.setAttribute('onClick', 'jump("'+imgName+'")');
+		img.style.cursor  = 'pointer';
+		img.style.width  = '314px';
 		img.style.height = '203.5px';
 
 		let table = document.createElement('table');
@@ -105,14 +119,14 @@
 		});
 
 		data = result;  // global
-		go();
+		fireTrigger();
 	}
 
 	window.addEventListener("load", getCSV, false);
 	</script>
 	<select id="imgName" onChange = "go()"></select>
 	<div id="h_main">@</div>
-	<fieldset><legend>Hue : 色の分布の近さ</legend>
+	<fieldset><legend>Hue : 色相の分布の近さ</legend>
 		<div id="h_hue" style="display: flex;">@</div>
 	</fieldset>
 	<fieldset><legend>Edge : レースなどが主張してくる分布 (memo: 26/27)</legend>
