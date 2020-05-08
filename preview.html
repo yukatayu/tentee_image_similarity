@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>preview</title>
+	<meta charset="utf-8"/>
+</head>
+<body>
+	<script>
+	const getCSV = () => {
+		var req = new XMLHttpRequest(); // HTTPでファイルを読み込むためのXMLHttpRrequestオブジェクトを生成
+		req.open("get", "build/recommend_data.csv.txt", true); // アクセスするファイルを指定
+		req.send(null); // HTTPリクエストの発行
+
+		// レスポンスが返ってきたらconvertCSVtoArray()を呼ぶ	
+		req.onload = function(){
+			convertCSV(req.responseText); // 渡されるのは読み込んだCSVデータ
+		}
+	}
+
+	const go = (e) => {
+		const imgName = document.querySelector("#imgName").value;
+		console.log('selected:', imgName);
+		const base = './tentee_patch/dream/';
+
+		let img = document.createElement('img');
+		img.setAttribute('src', base + imgName);
+
+		let h_main = document.querySelector('#h_main');
+		h_main.innerHTML = '';
+		h_main.appendChild(img);
+
+		let h_hue = document.querySelector('#h_hue');
+		h_hue.innerHTML = '';
+		data[imgName]['hue'].forEach((row, rank) => {
+			let img = document.createElement('img');
+			img.setAttribute('src', base + row.to);
+			h_hue.appendChild(img);
+		});
+
+		let h_edge = document.querySelector('#h_edge');
+		h_edge.innerHTML = '';
+		data[imgName]['edge'].forEach((row, rank) => {
+			let img = document.createElement('img');
+			img.setAttribute('src', base + row.to);
+			h_edge.appendChild(img);
+		});
+
+		let h_dir = document.querySelector('#h_dir');
+		h_dir.innerHTML = '';
+		data[imgName]['dir'].forEach((row, rank) => {
+			let img = document.createElement('img');
+			img.setAttribute('src', base + row.to);
+			h_dir.appendChild(img);
+		});
+	}
+
+	const convertCSV = (str) => {
+		let cells = [];
+		let rows = str.split("\n");
+		for(var i = 0; i < rows.length; ++i)
+			cells[i] = rows[i].split(',');
+
+		let result = {};
+		cells.forEach((row) => {
+			if(row.length < 5)
+				return;
+			const from = row[0];
+			const type = row[1];
+			const to = row[2];
+			const rank = row[3];
+			const score = row[4];
+			if(!result[from])
+				result[from] = {
+					'hue': [],
+					'edge': [],
+					'dir': [],
+				};
+			result[from][type][rank] = {
+				'to': to,
+				'score': 'score',
+			};
+		});
+		//console.log(result);
+
+		let sel = document.querySelector("#imgName")
+		Object.keys(result).forEach((name) => {
+			let opt = document.createElement('option');
+			opt.setAttribute('value', name);
+			opt.innerHTML = name;
+			sel.appendChild(opt);
+		});
+
+		data = result;  // global
+		go();
+	}
+
+	window.addEventListener("load", getCSV, false);
+	</script>
+	<select id="imgName" onChange = "go()"></select>
+	<div id="h_main">@</div>
+	<fieldset><legend>Hue</legend>
+		<div id="h_hue">@</div>
+	</fieldset>
+	<fieldset><legend>Edge</legend>
+		<div id="h_edge">@</div>
+	</fieldset>
+	<fieldset><legend>Direction</legend>
+		<div id="h_dir">@</div>
+	</fieldset>
+</body>
+</html>
+
