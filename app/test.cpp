@@ -4,6 +4,7 @@
 #include <utility>
 #include <string>
 #include <algorithm>
+#include <fstream>
 #include <boost/filesystem.hpp>
 #include <boost/foreach.hpp>
 #include <opencv2/opencv.hpp>
@@ -35,6 +36,7 @@ int main(){
 	cv::Mat img_blue1 = cv::imread("../tentee_patch/dream/0001.png");
 	cv::Mat img_blue2 = cv::imread("../tentee_patch/dream/0087.png");
 	cv::Mat img_blue3 = cv::imread("../tentee_patch/dream/0006.png");
+	cv::Mat img_blue4 = cv::imread("../tentee_patch/dream/0255.png");
 	cv::Mat img_yell1 = cv::imread("../tentee_patch/dream/0005.png");
 	cv::Mat img_pink1 = cv::imread("../tentee_patch/dream/0002.png");
 	cv::Mat img_pink2 = cv::imread("../tentee_patch/dream/0132.png");
@@ -42,23 +44,25 @@ int main(){
 	cv::Mat img_pink4 = cv::imread("../tentee_patch/dream/0004.png");
 	cv::Mat mask = cv::imread("tentee_patch/mask/mask.png", 0);
 	// memo: 1と12は近い, 2は遠い
+	// memo: 255と2はどちらも縞
 
 	auto fileList = getFileNames("../tentee_patch/dream/");
 
 	//cv::Mat feature = img | bilateral | sobel | gray | blur(6) | normalize;
 	//cv::imwrite("feature.png", feature);
 
-	std::map<std::string, cv::Mat> images = {
+	/*std::map<std::string, cv::Mat> images = {
 		{ "blue1", img_blue1 },
 		{ "blue2", img_blue2 },
 		{ "blue3", img_blue3 },
+		{ "blue4", img_blue4 },
 		{ "yell1", img_yell1 },
 		{ "pink1", img_pink1 },
 		{ "pink2", img_pink2 },
 		{ "pink3", img_pink3 },
 		{ "pink4", img_pink4 }
-	};
-	/*std::map<std::string, cv::Mat> images;
+	};*/
+	std::map<std::string, cv::Mat> images;
 	{
 		int cnt = 0;
 		for(auto&& fName : fileList){
@@ -68,7 +72,7 @@ int main(){
 			if(img.data)
 				images[fName] = img;
 		}
-	}*/
+	}
 
 std::cout << "start" << std::endl;
 	std::map<std::string, cv::MatND> hists;
@@ -80,7 +84,8 @@ std::cout << "start" << std::endl;
 	std::map<std::string, std::vector<double>> directions;
 	for(auto&& [name, img] : images){
 		directions[name] = img | blur(2) | gray | directionVec(mask);
-		std::cout << std::accumulate(directions[name].begin(), directions[name].end(), double{0.}, [](double acc, double d) { return d*d + acc; });
+		/*std::cout << std::accumulate(directions[name].begin(), directions[name].end(), double{0.}, [](double acc, double d) { return d*d + acc; });
+		std::cout << " - ";
 		std::cout << "directions[" << name << "] = ("
 			<< directions[name][0] << ", "
 			<< directions[name][1] << ", "
@@ -90,7 +95,7 @@ std::cout << "start" << std::endl;
 			<< directions[name][5] << ", "
 			<< directions[name][6] << ", "
 			<< directions[name][7] << ")"
-			<< std::endl;
+			<< std::endl;*/
 	}
 
 	int cnt = 0;
@@ -101,6 +106,9 @@ std::cout << "start" << std::endl;
 			res += lhs[i] * rhs[i];
 		return res;
 	};
+	// from, type [hue, edge, dir], to, index (0-), score (0-1)
+	const int maxIndex = 5;
+	std::ofstream data("recommend_data.csv");
 	for(auto&& [name, img] : images){
 		if(++cnt % 10 == 0)
 			std::cout << cnt << " / " << images.size() << " ... " << std::endl;
@@ -113,6 +121,7 @@ std::cout << "start" << std::endl;
 		auto&& dir  = directions.at(name);
 		// target
 		for(auto&& [tName, tImg] : images){
+			if(name == tName) continue; // 自身とは比較しない (edge,dir,hueのスコアは常に1)
 			auto&& tPls  = placements.at(tName);
 			auto&& tHist = hists.at(tName);
 			auto&& tDir  = directions.at(tName);
@@ -137,24 +146,37 @@ std::cout << "start" << std::endl;
 		std::sort(list_hue.begin(), list_hue.end());
 		std::reverse(list_hue.begin(), list_hue.end());
 
-		std::cout << " Hue  > ";
-		std::cout << name << " -> ";
-		for(auto [tHist, tName] : list_hue)
-			std::cout << tName << "(" << tHist << "), ";
-		std::cout << std::endl;
+		for(int i=0; i<maxIndex && i < list_hue.size(); ++i){
+			auto [tHist, tName] = list_hue[i];
+			data << name << "," << "hue" << "," << tName << "," << i << "," << tHist << "\n";
+		}
+		//std::cout << " Hue  > ";
+		//std::cout << name << " -> ";
+		//for(auto [tHist, tName] : list_hue)
+		//	std::cout << tName << "(" << tHist << "), ";
+		//std::cout << std::endl;
 
-		std::cout << " Edge > ";
-		std::cout << name << " -> ";
-		for(auto [tHist, tName] : list_edge)
-			std::cout << tName << "(" << tHist << "), ";
-		std::cout << std::endl;
+		for(int i=0; i<maxIndex && i < list_edge.size(); ++i){
+			auto [tHist, tName] = list_edge[i];
+			data << name << "," << "edge" << "," << tName << "," << i << "," << tHist << "\n";
+		}
+		//std::cout << " Edge > ";
+		//std::cout << name << " -> ";
+		//for(auto [tHist, tName] : list_edge)
+		//	std::cout << tName << "(" << tHist << "), ";
+		//std::cout << std::endl;
 
-		std::cout << " Dir  > ";
-		std::cout << name << " -> ";
-		for(auto [tHist, tName] : list_dir)
-			std::cout << tName << "(" << tHist << "), ";
-		std::cout << std::endl;
-		std::cout << std::endl;
+		for(int i=0; i<maxIndex && i < list_dir.size(); ++i){
+			auto [tHist, tName] = list_dir[i];
+			data << name << "," << "dir" << "," << tName << "," << i << "," << tHist << "\n";
+		}
+		data << std::flush;
+		//std::cout << " Dir  > ";
+		//std::cout << name << " -> ";
+		//for(auto [tHist, tName] : list_dir)
+		//	std::cout << tName << "(" << tHist << "), ";
+		//std::cout << std::endl;
+		//std::cout << std::endl;
 
 	}
 
