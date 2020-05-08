@@ -59,9 +59,9 @@ namespace illust_image_similarity {
 		ParameterizedFilter mean{ [](cv::Mat src, cv::Mat mask) -> double {
 			return cv::mean(src, mask)[0];
 		}};
-		// 返り値は長さ4
+		// 返り値は長さ8
 		ParameterizedFilter directionVec { [](cv::Mat src, cv::Mat mask) -> std::vector<double> {
-			// direction: [0, 4)
+			// direction: [0, 8)
 			std::vector<double> res(8);
 			// create sobel kernel
 			constexpr double kernels_raw[8][3][3] = {
@@ -110,17 +110,17 @@ namespace illust_image_similarity {
 			for(int i=0; i<8; ++i)
 				res[i] = src | conv2D(kernels[i]) | abs | mean(mask);
 			// Rotate
-//			int offset = std::max_element(res.begin(), res.end()) - res.begin();
-//			std::vector<double> res_tmp = res;
-//			for(int i=0; i<8 - 1; ++i)
-//				res_tmp.push_back(res[i]);
-//
-//			//std::cout << " (";
-//			//for(int i=0; i<15; ++i) std::cout << res_tmp[i] << ", ";
-//			//std::cout << " | offset = " << offset << std::endl;
-//
-//			for(int i=0; i<8; ++i)
-//				res[i] = res_tmp[i + offset];
+			int offset = std::max_element(res.begin(), res.end()) - res.begin();
+			std::vector<double> res_tmp = res;
+			for(int i=0; i<8 - 1; ++i)
+				res_tmp.push_back(res[i]);
+
+			//std::cout << " (";
+			//for(int i=0; i<15; ++i) std::cout << res_tmp[i] << ", ";
+			//std::cout << " | offset = " << offset << std::endl;
+
+			for(int i=0; i<8; ++i)
+				res[i] = res_tmp[i + offset];
 			// Mirror
 			if(res[2] < res[6]){
 				std::swap(res[1], res[7]);

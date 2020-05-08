@@ -11,11 +11,7 @@
 #include <opencv2/features2d.hpp>
 #include <illust_image_similarity.hpp>
 
-using namespace illust_image_similarity;
-
-	using namespace feature;
-
-
+using namespace illust_image_similarity::feature;
 
 std::vector<std::string> getFileNames(std::string pathStr) {
 	std::vector<std::string> res;
@@ -30,39 +26,28 @@ std::vector<std::string> getFileNames(std::string pathStr) {
 }
 
 int main(){
+	cv::Mat mask = cv::imread("tentee_patch/mask/mask.png", 0);
+	// vvv For testing vvv //
 	// b1, b3, y1 -> double edge
 	// b2, p1, p2, p3 -> single edge
 	// p3 -> no edge
-	cv::Mat img_blue1 = cv::imread("../tentee_patch/dream/0001.png");
-	cv::Mat img_blue2 = cv::imread("../tentee_patch/dream/0087.png");
-	cv::Mat img_blue3 = cv::imread("../tentee_patch/dream/0006.png");
-	cv::Mat img_blue4 = cv::imread("../tentee_patch/dream/0255.png");
-	cv::Mat img_yell1 = cv::imread("../tentee_patch/dream/0005.png");
-	cv::Mat img_pink1 = cv::imread("../tentee_patch/dream/0002.png");
-	cv::Mat img_pink2 = cv::imread("../tentee_patch/dream/0132.png");
-	cv::Mat img_pink3 = cv::imread("../tentee_patch/dream/0138.png");
-	cv::Mat img_pink4 = cv::imread("../tentee_patch/dream/0004.png");
-	cv::Mat mask = cv::imread("tentee_patch/mask/mask.png", 0);
+	/*std::map<std::string, cv::Mat> images = {
+		{ "blue1", cv::imread("../tentee_patch/dream/0001.png") },
+		{ "blue2", cv::imread("../tentee_patch/dream/0087.png") },
+		{ "blue3", cv::imread("../tentee_patch/dream/0006.png") },
+		{ "blue4", cv::imread("../tentee_patch/dream/0255.png") },
+		{ "yell1", cv::imread("../tentee_patch/dream/0005.png") },
+		{ "pink1", cv::imread("../tentee_patch/dream/0002.png") },
+		{ "pink2", cv::imread("../tentee_patch/dream/0132.png") },
+		{ "pink3", cv::imread("../tentee_patch/dream/0138.png") },
+		{ "pink4", cv::imread("../tentee_patch/dream/0004.png") }
+	};*/
 	// memo: 1と12は近い, 2は遠い
 	// memo: 255と2はどちらも縞
+	// ^^^ For testing ^^^ //
+	std::map<std::string, cv::Mat> images;
 
 	auto fileList = getFileNames("../tentee_patch/dream/");
-
-	//cv::Mat feature = img | bilateral | sobel | gray | blur(6) | normalize;
-	//cv::imwrite("feature.png", feature);
-
-	/*std::map<std::string, cv::Mat> images = {
-		{ "blue1", img_blue1 },
-		{ "blue2", img_blue2 },
-		{ "blue3", img_blue3 },
-		{ "blue4", img_blue4 },
-		{ "yell1", img_yell1 },
-		{ "pink1", img_pink1 },
-		{ "pink2", img_pink2 },
-		{ "pink3", img_pink3 },
-		{ "pink4", img_pink4 }
-	};*/
-	std::map<std::string, cv::Mat> images;
 	{
 		int cnt = 0;
 		for(auto&& fName : fileList){
@@ -74,29 +59,19 @@ int main(){
 		}
 	}
 
-std::cout << "start" << std::endl;
+	std::cout << "start" << std::endl;
+
 	std::map<std::string, cv::MatND> hists;
 	for(auto&& [name, img] : images)
-		hists[name] = img | histgramHue(mask);
+		hists[name] = img | hueHistgramAlgorithm(mask);
+
 	std::map<std::string, cv::MatND> placements;
 	for(auto&& [name, img] : images)
-		placements[name] = img | bilateral | sobel | gray | blur(6) | normalize;
+		placements[name] = img | placementAlgorithm;
+
 	std::map<std::string, std::vector<double>> directions;
-	for(auto&& [name, img] : images){
-		directions[name] = img | blur(2) | gray | directionVec(mask);
-		/*std::cout << std::accumulate(directions[name].begin(), directions[name].end(), double{0.}, [](double acc, double d) { return d*d + acc; });
-		std::cout << " - ";
-		std::cout << "directions[" << name << "] = ("
-			<< directions[name][0] << ", "
-			<< directions[name][1] << ", "
-			<< directions[name][2] << ", "
-			<< directions[name][3] << ", "
-			<< directions[name][4] << ", "
-			<< directions[name][5] << ", "
-			<< directions[name][6] << ", "
-			<< directions[name][7] << ")"
-			<< std::endl;*/
-	}
+	for(auto&& [name, img] : images)
+		directions[name] = img | directionPreprocess | directionVec(mask);
 
 	int cnt = 0;
 	auto cdot = [](const std::vector<double>& lhs, const std::vector<double>& rhs) -> double {
@@ -127,9 +102,9 @@ std::cout << "start" << std::endl;
 			auto&& tDir  = directions.at(tName);
 			list_hue.emplace_back(cv::compareHist(hist, tHist, cv::HISTCMP_CORREL), tName);
 
-			//list_edge.emplace_back(cv::norm(img, tImg, cv::NORM_L1), tName);
 			cv::Mat tmp;
 			// Normalized Cross-Correlation
+			//list_edge.emplace_back(cv::norm(img, tImg, cv::NORM_L1), tName);
 			cv::matchTemplate(pls, tPls, tmp, CV_TM_CCOEFF_NORMED);
 			list_edge.emplace_back(tmp.at<float>(0,0), tName);
 
@@ -150,46 +125,20 @@ std::cout << "start" << std::endl;
 			auto [tHist, tName] = list_hue[i];
 			data << name << "," << "hue" << "," << tName << "," << i << "," << tHist << "\n";
 		}
-		//std::cout << " Hue  > ";
-		//std::cout << name << " -> ";
-		//for(auto [tHist, tName] : list_hue)
-		//	std::cout << tName << "(" << tHist << "), ";
-		//std::cout << std::endl;
 
 		for(int i=0; i<maxIndex && i < list_edge.size(); ++i){
 			auto [tHist, tName] = list_edge[i];
 			data << name << "," << "edge" << "," << tName << "," << i << "," << tHist << "\n";
 		}
-		//std::cout << " Edge > ";
-		//std::cout << name << " -> ";
-		//for(auto [tHist, tName] : list_edge)
-		//	std::cout << tName << "(" << tHist << "), ";
-		//std::cout << std::endl;
 
 		for(int i=0; i<maxIndex && i < list_dir.size(); ++i){
 			auto [tHist, tName] = list_dir[i];
 			data << name << "," << "dir" << "," << tName << "," << i << "," << tHist << "\n";
 		}
 		data << std::flush;
-		//std::cout << " Dir  > ";
-		//std::cout << name << " -> ";
-		//for(auto [tHist, tName] : list_dir)
-		//	std::cout << tName << "(" << tHist << "), ";
-		//std::cout << std::endl;
-		//std::cout << std::endl;
 
 	}
 
-std::cout << "end" << std::endl;
-	// keypoint
-	// std::vector<cv::KeyPoint> kpts;
-	// cv::Mat desc;
-	// feature = cv::xfeatures2d::SIFT::create();
-	// feature->detectAndCompute(img_pink1, img_pink3, kpts, desc);
-	// cv::FAST(img_blue1, keypts, orb_params_.ini_fast_thr_, true);
-
-	// std::cout << "near: " << cv::compareHist(hist, hist12, cv::HISTCMP_CORREL) << std::endl;
-	// std::cout << "far: " << cv::compareHist(hist, hist2, cv::HISTCMP_CORREL) << std::endl;
-	// std::cout << "far: " << cv::compareHist(hist2, hist12, cv::HISTCMP_CORREL) << std::endl;
+	std::cout << "end" << std::endl;
 }
 
