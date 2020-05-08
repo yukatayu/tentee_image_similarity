@@ -7,50 +7,64 @@
 <body>
 	<script>
 	const getCSV = () => {
-		var req = new XMLHttpRequest(); // HTTPでファイルを読み込むためのXMLHttpRrequestオブジェクトを生成
-		req.open("get", "build/recommend_data.csv.txt", true); // アクセスするファイルを指定
-		req.send(null); // HTTPリクエストの発行
-
-		// レスポンスが返ってきたらconvertCSVtoArray()を呼ぶ	
+		// TODO: fetchの使い方忘れた＞＜
+		var req = new XMLHttpRequest();
+		req.open("get", "build/recommend_data.csv.txt", true);
+		req.send(null);
 		req.onload = function(){
-			convertCSV(req.responseText); // 渡されるのは読み込んだCSVデータ
+			convertCSV(req.responseText);
 		}
+	}
+
+	const cellOf = (elem) => {
+		let tr = document.createElement('tr');
+		let td = document.createElement('td');
+		td.appendChild(elem);
+		tr.appendChild(td);
+		return tr;
+	}
+
+	const imgOf = (imgName, description) => {
+		const base = './tentee_patch/dream/';
+		let img = document.createElement('img');
+		img.setAttribute('src', base + imgName);
+		img.style.width = '314px';
+		img.style.height = '203.5px';
+
+		let table = document.createElement('table');
+		let tbody = document.createElement('tbody');
+		table.appendChild(tbody);
+		tbody.appendChild(cellOf(img));
+		tbody.appendChild(cellOf(document.createTextNode(imgName)));
+		tbody.appendChild(cellOf(document.createTextNode(description)));
+		return table;
 	}
 
 	const go = (e) => {
 		const imgName = document.querySelector("#imgName").value;
 		console.log('selected:', imgName);
-		const base = './tentee_patch/dream/';
 
-		let img = document.createElement('img');
-		img.setAttribute('src', base + imgName);
 
 		let h_main = document.querySelector('#h_main');
 		h_main.innerHTML = '';
-		h_main.appendChild(img);
+		h_main.appendChild(imgOf(imgName, '-'));
 
 		let h_hue = document.querySelector('#h_hue');
 		h_hue.innerHTML = '';
 		data[imgName]['hue'].forEach((row, rank) => {
-			let img = document.createElement('img');
-			img.setAttribute('src', base + row.to);
-			h_hue.appendChild(img);
+			h_hue.appendChild(imgOf(row.to, row.score));
 		});
 
 		let h_edge = document.querySelector('#h_edge');
 		h_edge.innerHTML = '';
 		data[imgName]['edge'].forEach((row, rank) => {
-			let img = document.createElement('img');
-			img.setAttribute('src', base + row.to);
-			h_edge.appendChild(img);
+			h_edge.appendChild(imgOf(row.to, row.score));
 		});
 
 		let h_dir = document.querySelector('#h_dir');
 		h_dir.innerHTML = '';
 		data[imgName]['dir'].forEach((row, rank) => {
-			let img = document.createElement('img');
-			img.setAttribute('src', base + row.to);
-			h_dir.appendChild(img);
+			h_dir.appendChild(imgOf(row.to, row.score));
 		});
 	}
 
@@ -77,7 +91,7 @@
 				};
 			result[from][type][rank] = {
 				'to': to,
-				'score': 'score',
+				'score': score,
 			};
 		});
 		//console.log(result);
@@ -98,14 +112,14 @@
 	</script>
 	<select id="imgName" onChange = "go()"></select>
 	<div id="h_main">@</div>
-	<fieldset><legend>Hue</legend>
-		<div id="h_hue">@</div>
+	<fieldset><legend>Hue : 色の分布の近さ</legend>
+		<div id="h_hue" style="display: flex;">@</div>
 	</fieldset>
-	<fieldset><legend>Edge</legend>
-		<div id="h_edge">@</div>
+	<fieldset><legend>Edge : レースなどが主張してくる分布 (memo: 26/27)</legend>
+		<div id="h_edge" style="display: flex;">@</div>
 	</fieldset>
-	<fieldset><legend>Direction</legend>
-		<div id="h_dir">@</div>
+	<fieldset><legend>Direction : 横縞など (memo: 255)</legend>
+		<div id="h_dir" style="display: flex;">@</div>
 	</fieldset>
 </body>
 </html>
