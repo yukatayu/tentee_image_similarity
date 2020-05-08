@@ -19,3 +19,11 @@ if(OpenCV_FOUND)
 	target_link_libraries(run_test ${OpenCV_LIBS})
 endif()
 
+# Boost
+find_package(Boost REQUIRED
+             COMPONENTS system filesystem)
+if(Boost_FOUND)
+	target_include_directories(run_test PUBLIC ${Boost_INCLUDE_DIRS})
+	target_link_libraries(run_test Boost::system Boost::filesystem)
+endif()
+
