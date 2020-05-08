@@ -2,14 +2,17 @@
 <html>
 <head>
 	<title>preview</title>
-	<meta charset="utf-8"/>
+	<meta charset='utf-8'/>
 </head>
 <body>
 	<script>
 	const getCSV = () => {
 		// TODO: fetchの使い方忘れた＞＜
 		var req = new XMLHttpRequest();
-		req.open("get", "build/recommend_data.csv.txt", true);
+		req.open('GET', 'build/recommend_data.csv.txt', true);
+		req.setRequestHeader('Pragma', 'no-cache');
+		req.setRequestHeader('Cache-Control', 'no-cache');
+		req.setRequestHeader('If-Modified-Since', 'Thu, 01 Jun 1970 00:00:00 GMT');
 		req.send(null);
 		req.onload = function(){
 			convertCSV(req.responseText);
@@ -17,13 +20,13 @@
 	}
 
 	const fireTrigger = () => {
-		let e = document.createEvent("HTMLEvents");
+		let e = document.createEvent('HTMLEvents');
 		e.initEvent('change', true, true); // event type, bubbling, cancelable
-		return document.querySelector("#imgName").dispatchEvent(e);
+		return document.querySelector('#imgName').dispatchEvent(e);
 	}
 
 	const jump = (name) => {
-		document.querySelector("#imgName").value = name;
+		document.querySelector('#imgName').value = name;
 		fireTrigger();
 	};
 
@@ -55,7 +58,7 @@
 	}
 
 	const go = (e) => {
-		const imgName = document.querySelector("#imgName").value;
+		const imgName = document.querySelector('#imgName').value;
 		console.log('selected:', imgName);
 
 
@@ -84,7 +87,7 @@
 
 	const convertCSV = (str) => {
 		let cells = [];
-		let rows = str.split("\n");
+		let rows = str.split('\n');
 		for(var i = 0; i < rows.length; ++i)
 			cells[i] = rows[i].split(',');
 
@@ -110,7 +113,7 @@
 		});
 		//console.log(result);
 
-		let sel = document.querySelector("#imgName")
+		let sel = document.querySelector('#imgName')
 		Object.keys(result).forEach((name) => {
 			let opt = document.createElement('option');
 			opt.setAttribute('value', name);
@@ -122,7 +125,7 @@
 		fireTrigger();
 	}
 
-	window.addEventListener("load", getCSV, false);
+	window.addEventListener('load', getCSV, false);
 	</script>
 	<select id="imgName" onChange = "go()"></select>
 	<div id="h_main">@</div>
