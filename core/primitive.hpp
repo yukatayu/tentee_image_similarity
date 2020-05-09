@@ -99,6 +99,42 @@ namespace illust_image_similarity {
 					{   0, 0,-1.5}
 				}
 			};
+			// これは精度が悪かった (方向特性が低い…？)
+			/*constexpr double kernels_raw[8][3][3] = {
+				{
+					{ 1, 1, 0},
+					{ 1,-6, 1},
+					{ 0, 1, 1}
+				}, {
+					{ 1.5, 1.5,   0},
+					{   0,  -6,   0},
+					{   0, 1.5, 1.5}
+				}, {
+					{ 1, 1, 1},
+					{ 0,-6, 0},
+					{ 1, 1, 1}
+				}, {
+					{   0, 1.5, 1.5},
+					{   0,  -6,   0},
+					{ 1.5, 1.5,   0}
+				}, {
+					{ 0, 1, 1},
+					{ 1,-6, 1},
+					{ 1, 1, 0}
+				}, {
+					{   0, 0, 1.5},
+					{ 1.5,-6, 1.5},
+					{ 1.5, 0,   0}
+				}, {
+					{ 1, 0, 1},
+					{ 1,-6, 1},
+					{ 1, 0, 1}
+				}, {
+					{ 1.5, 0,   0},
+					{ 1.5,-6, 1.5},
+					{   0, 0, 1.5}
+				}
+			};*/
 			std::vector<cv::Mat> kernels(8);
 			for(int i=0; i<8; ++i){
 				kernels[i] = cv::Mat(3, 3, CV_32FC1);
@@ -109,24 +145,27 @@ namespace illust_image_similarity {
 			// Edge Detection
 			for(int i=0; i<8; ++i)
 				res[i] = src | conv2D(kernels[i]) | abs | mean(mask);
+
+			// 回転は行わない方が結果が良かった
 			// Rotate
-			int offset = std::max_element(res.begin(), res.end()) - res.begin();
-			std::vector<double> res_tmp = res;
-			for(int i=0; i<8 - 1; ++i)
-				res_tmp.push_back(res[i]);
+			//Int offset = std::max_element(res.begin(), res.end()) - res.begin();
+			//Std::vector<double> res_tmp = res;
+			//For(int i=0; i<8 - 1; ++i)
+			//	res_tmp.push_back(res[i]);
 
-			//std::cout << " (";
-			//for(int i=0; i<15; ++i) std::cout << res_tmp[i] << ", ";
-			//std::cout << " | offset = " << offset << std::endl;
+			////std::cout << " (";
+			////for(int i=0; i<15; ++i) std::cout << res_tmp[i] << ", ";
+			////std::cout << " | offset = " << offset << std::endl;
 
-			for(int i=0; i<8; ++i)
-				res[i] = res_tmp[i + offset];
-			// Mirror
-			if(res[2] < res[6]){
-				std::swap(res[1], res[7]);
-				std::swap(res[2], res[6]);
-				std::swap(res[3], res[5]);
-			}
+			//For(int i=0; i<8; ++i)
+			//	res[i] = res_tmp[i + offset];
+			//// Mirror
+			//If(res[2] < res[6]){
+			//	std::swap(res[1], res[7]);
+			//	std::swap(res[2], res[6]);
+			//	std::swap(res[3], res[5]);
+			//}
+
 			// Normalize
 			double norm = std::sqrt(std::accumulate(res.begin(), res.end(), double{0.}, [](double acc, double d) {
 				return d*d + acc;
