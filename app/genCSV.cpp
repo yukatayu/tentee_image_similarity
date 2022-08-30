@@ -105,7 +105,7 @@ int main(){
 			cv::Mat tmp;
 			// Normalized Cross-Correlation
 			//list_edge.emplace_back(cv::norm(img, tImg, cv::NORM_L1), tName);
-			cv::matchTemplate(pls, tPls, tmp, CV_TM_CCOEFF_NORMED);
+			cv::matchTemplate(pls, tPls, tmp, cv::TM_CCOEFF_NORMED);
 			list_edge.emplace_back(tmp.at<float>(0,0), tName);
 
 			// dot product

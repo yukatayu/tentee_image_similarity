@@ -45,7 +45,7 @@ namespace illust_image_similarity {
 		}};
 		Filter gray { [](cv::Mat src) -> cv::Mat {
 			cv::Mat dst;
-			cv::cvtColor(src, dst, CV_RGB2GRAY);
+			cv::cvtColor(src, dst, cv::COLOR_RGB2GRAY);
 			return dst;
 		}};
 		ParameterizedFilter conv2D { [](cv::Mat src, cv::Mat kernel) -> cv::Mat {
